@@ -31,31 +31,26 @@ class TowerSorting(Problem):
         for i in range(state.number):
             if len(state.grid[i]) == state.size:
                 indexFullCol.append(i)
-        nbrFullCol = len(indexFullCol)
 
         for i in range(state.number):
             for j in range(state.number):
-                if (j != i and j not in indexFullCol):
-                    allActions.append((i,j))
-        
+                if j != i and j not in indexFullCol:
+                    allActions.append((i, j))
 
         return allActions
-
 
     def result(self, state, action):
         """Return the state that results from executing the given
         action in the given state. The action must be one of
         self.actions(state)."""
-        
 
         valueToMove = state.grid[action[0]][-1]
         newGrid = copy.deepcopy(state.grid)
         newGrid[action[0]].pop()
         newGrid[action[1]].append(valueToMove)
-        newState =State(state.number, state.size, newGrid, "Move")
-        
-        return newState
+        newState = State(state.number, state.size, newGrid, "Move")
 
+        return newState
 
     def goal_test(self, state):
         """Return True if the state is a goal. The default method compares the
@@ -63,6 +58,7 @@ class TowerSorting(Problem):
         list, as specified in the constructor. Override this method if
         checking against a single self.goal is not enough."""
         return self.__eq__(state)
+
 
 ###############
 # State class #
@@ -100,12 +96,10 @@ class State:
             return True
         else:
             return False
-                
 
     # Define how to hash a State object
     def __hash__(self):
         pass
-        
 
 
 ######################
@@ -119,7 +113,7 @@ def read_instance_file(filepath):
 
     number_tower, size_tower = tuple([int(i) for i in lines[0].split(" ")])
     initial_grid = [[] for i in range(number_tower)]
-    for row in lines[1:size_tower+1]:
+    for row in lines[1:size_tower + 1]:
         elems = row.split(" ")
         for index in range(number_tower):
             if elems[index] != '.':
@@ -130,19 +124,18 @@ def read_instance_file(filepath):
 
     return number_tower, size_tower, initial_grid
 
-state1 = read_instance_file("./instances/i01")
+
+"""state1 = read_instance_file("./instances/i01")
 State1 = State(state1[0], state1[1], state1[2])
-myAgent = TowerSorting(State1)
-print(myAgent.actions(State1))
-print(myAgent.result(State1,(0, 1)))
+myAgent = SimpleProblemSolvingAgentProgram(state1)
 
-
+print(myAgent.result(State1, (0, 1)))"""
 
 if __name__ == "__main__":
     # Check if the instance file has been provided
     if len(sys.argv) != 2:
         print(f"Usage: ./sort_tower.py ./instances/i01")
-    filepath = "./instances/i01"
+    filepath = sys.argv[1]
 
     # Read in the instance file
     number, size, initial_grid = read_instance_file(filepath)
@@ -152,13 +145,15 @@ if __name__ == "__main__":
     problem = TowerSorting(init_state)
     print("Noeud Initial : ", problem.initial)
 
+
     # Example of search
     listOfActions = problem.actions(init_state)
     listOfResult = []
     for i in range(len(listOfActions)):
         listOfResult.append(problem.result(init_state, listOfActions[i]))
-    
-    for i in range (len(listOfResult)):
+        
+
+    for i in range(len(listOfResult)):
         print(listOfResult[i])
 
     # Use depth-first tree search to solve the problem and record performance metrics
@@ -166,7 +161,7 @@ if __name__ == "__main__":
     node, nb_explored, remaining_nodes = depth_first_tree_search(problem)
     end_timer = time.perf_counter()
 
- # Example of print
+    # Example of print
     # Print the path from the initial state to the goal state, as well as the performance metrics
     path = node.path()
 
@@ -177,4 +172,4 @@ if __name__ == "__main__":
     print("* Execution time:\t", str(end_timer - start_timer))
     print("* Path cost to goal:\t", node.depth, "moves")
     print("* #Nodes explored:\t", nb_explored)
-    print("* Queue size at goal:\t",  remaining_nodes)
+    print("* Queue size at goal:\t", remaining_nodes)
