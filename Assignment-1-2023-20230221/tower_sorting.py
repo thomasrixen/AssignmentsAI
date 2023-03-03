@@ -7,6 +7,7 @@ Name of the author(s):
 import copy
 import time
 import sys
+from _socket import timeout
 from copy import deepcopy
 from search import *
 
@@ -18,26 +19,25 @@ from search import *
 # Define the TowerSorting problem as a subclass of the generic Problem class
 class TowerSorting(Problem):
 
-    # Define methods specific to this problem
+    def __init__(self, init_state):
+        self.num = init_state.number
+        self.hight = init_state.size
+        super().__init__(init_state)
 
     def actions(self, state):
-        """Return the actions that can be executed in the given
+        """Return an iterator over the actions that can be executed in the given
         state. The result would typically be a list, but if there are
         many actions, consider yielding them one at a time in an
         iterator, rather than building them all at once."""
         indexFullCol = []
-        allActions = []
-
         for i in range(state.number):
             if len(state.grid[i]) == state.size:
                 indexFullCol.append(i)
 
         for i in range(state.number):
             for j in range(state.number):
-                if j != i and j not in indexFullCol:
-                    allActions.append((i, j))
-
-        return allActions
+                if j != i and j not in indexFullCol and len(state.grid[i]) > 0 and len(state.grid[j]) < self.num:
+                    yield (i, j)
 
     def result(self, state, action):
         """Return the state that results from executing the given
@@ -57,8 +57,14 @@ class TowerSorting(Problem):
         state to self.goal or checks for state in self.goal if it is a
         list, as specified in the constructor. Override this method if
         checking against a single self.goal is not enough."""
-        return self.__eq__(state)
-
+        for pile in state.grid:
+            if len(pile) != 0:
+                if len(pile) < self.num:
+                    return False
+                for i in range(1, self.num):
+                    if pile[0] != pile[i]:
+                        return False
+        return True
 
 ###############
 # State class #
@@ -99,8 +105,10 @@ class State:
 
     # Define how to hash a State object
     def __hash__(self):
-        pass
+        return hash(self.makeTuple(self.grid))
 
+    def makeTuple(self, stateGride):
+        return tuple(tuple(elem for elem in pile) for pile in stateGride)
 
 ######################
 # Auxiliary function #
@@ -132,37 +140,20 @@ myAgent = SimpleProblemSolvingAgentProgram(state1)
 print(myAgent.result(State1, (0, 1)))"""
 
 if __name__ == "__main__":
-    # Check if the instance file has been provided
     if len(sys.argv) != 2:
-        print(f"Usage: ./sort_tower.py ./instances/i01")
+        print(f"Usage: ./sort_tower.py <path_to_instance_file>")
     filepath = sys.argv[1]
 
-    # Read in the instance file
     number, size, initial_grid = read_instance_file(filepath)
 
-    # Create an initial state for the problem
     init_state = State(number, size, initial_grid, "Init")
     problem = TowerSorting(init_state)
-    print("Noeud Initial : ", problem.initial)
-
-
     # Example of search
-    listOfActions = problem.actions(init_state)
-    listOfResult = []
-    for i in range(len(listOfActions)):
-        listOfResult.append(problem.result(init_state, listOfActions[i]))
-        
-
-    for i in range(len(listOfResult)):
-        print(listOfResult[i])
-
-    # Use depth-first tree search to solve the problem and record performance metrics
     start_timer = time.perf_counter()
-    node, nb_explored, remaining_nodes = depth_first_tree_search(problem)
+    node, nb_explored, remaining_nodes = breadth_first_graph_search(problem)
     end_timer = time.perf_counter()
 
     # Example of print
-    # Print the path from the initial state to the goal state, as well as the performance metrics
     path = node.path()
 
     for n in path:
@@ -172,4 +163,4 @@ if __name__ == "__main__":
     print("* Execution time:\t", str(end_timer - start_timer))
     print("* Path cost to goal:\t", node.depth, "moves")
     print("* #Nodes explored:\t", nb_explored)
-    print("* Queue size at goal:\t", remaining_nodes)
+    print("* Queue size at goal:\t",  remaining_nodes)
