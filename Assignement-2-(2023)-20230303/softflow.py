@@ -1,4 +1,6 @@
-from search import *
+import sys
+sys.path.insert(0, '')
+from aima-python3 import
 
 #################
 # Problem class #
